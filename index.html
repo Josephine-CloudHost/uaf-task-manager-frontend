@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Ledger — UAF-LR Task Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="root">
+
+  <!-- ===================== LOGIN ===================== -->
+  <section id="login-screen" class="screen">
+    <div class="login-card">
+      <div class="login-mark">
+        <div class="glyph">FL</div>
+        <h1>Field Ledger</h1>
+      </div>
+      <p class="login-sub">UAF-LR Task &amp; Contact Manager</p>
+
+      <div id="login-error" class="form-error hidden"></div>
+
+      <form id="login-form">
+        <div class="field">
+          <label for="login-username">Username</label>
+          <input type="text" id="login-username" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" autocomplete="current-password" required>
+        </div>
+        <div class="field">
+          <label for="login-role">User type</label>
+          <select id="login-role">
+            <option value="">Any (match account)</option>
+          </select>
+          <div class="hint">If you know your role, selecting it adds a check against the wrong portal.</div>
+        </div>
+        <button type="submit" class="btn btn-full" id="login-submit">Log in</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ===================== APP SHELL ===================== -->
+  <div id="app-shell" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="sidebar-mark">
+        <div class="glyph">FL</div>
+        <div>
+          <div class="name">Field Ledger</div>
+          <div class="org">UAF-LR</div>
+        </div>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user" id="sidebar-user"></div>
+        <div class="sidebar-role" id="sidebar-role"></div>
+        <button class="btn btn-ghost btn-sm" id="logout-btn" style="width:100%; color:#f2efe4; border-color:rgba(242,239,228,0.25);">Log out</button>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <h1 id="page-title">—</h1>
+        <div class="subtitle" id="page-subtitle"></div>
+      </header>
+      <div id="content"></div>
+    </main>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toast-root"></div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
