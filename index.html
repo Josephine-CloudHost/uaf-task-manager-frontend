@@ -3,23 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UAF Tasks Tracker</title>
+<title>UAF Tasks Tracker — Upskill Africa Foundation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
 <div id="root">
 
   <!-- ===================== LOGIN ===================== -->
   <section id="login-screen" class="screen">
     <div class="login-card">
+
       <div class="login-mark">
-        <div class="glyph">FL</div>
-        <h1>Upskill Africa Foundation's Tasks Tracker</h1>
+        <p class="org-eyebrow">Upskill Africa Foundation</p>
+        <h1 class="login-title">Tasks Tracker</h1>
+        <p class="login-sub">Programs, tasks and partner reporting in one place</p>
       </div>
-      <p class="login-sub">UAF Task &amp; Contact Manager</p>
 
       <div id="login-error" class="form-error hidden"></div>
 
@@ -41,6 +42,8 @@
         </div>
         <button type="submit" class="btn btn-full" id="login-submit">Log in</button>
       </form>
+
+      <p class="login-footer">Upskill Africa Foundation &middot; Internal system</p>
     </div>
   </section>
 
@@ -48,19 +51,19 @@
   <div id="app-shell" class="app-shell hidden">
     <aside class="sidebar">
       <div class="sidebar-mark">
-        <div class="glyph">UAF</div>
-        <div>
-          <div class="name">Task Tracking App</div>
-          <div class="org">UAF</div>
-        </div>
+        <p class="sidebar-org">Upskill Africa Foundation</p>
+        <p class="sidebar-app-name">Tasks Tracker</p>
       </div>
+
       <nav class="nav" id="nav"></nav>
+
       <div class="sidebar-footer">
         <div class="sidebar-user" id="sidebar-user"></div>
         <div class="sidebar-role" id="sidebar-role"></div>
-        <button class="btn btn-ghost btn-sm" id="logout-btn" style="width:100%; color:#f2efe4; border-color:rgba(242,239,228,0.25);">Log out</button>
+        <button class="btn btn-ghost btn-sm" id="logout-btn">Log out</button>
       </div>
     </aside>
+
     <main class="main">
       <header class="topbar">
         <h1 id="page-title">—</h1>
