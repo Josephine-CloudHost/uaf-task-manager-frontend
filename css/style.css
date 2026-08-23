@@ -2,49 +2,49 @@
    UAF TASKS TRACKER — Upskill Africa Foundation
    Design tokens
    ---------------------------------------------------------------------
-   Palette
-     --bg          #F4F5F2  cool paper background (institutional, not cream)
+   Palette (blue — brand colour)
+     --bg          #F2F5F9  cool light background
      --surface     #FFFFFF  cards / panels
-     --sidebar     #12241F  deep charcoal-forest (identity colour)
-     --sidebar-2   #1B342D  sidebar hover / active surface
-     --primary     #2F5C46  forest green — primary actions, links
-     --primary-dk  #234433  primary hover/active
-     --gold        #A9812E  signature accent — used sparingly only
-     --ink         #1B211E  primary text
-     --ink-soft    #5B655F  secondary text
-     --line        #DCE0DA  hairline borders
+     --primary     #1D4E89  institutional blue — header, buttons, links
+     --primary-dk  #153A66  hover / active
+     --accent      #4C8BC2  lighter blue — signature accent, focus rings
+     --ink         #1B222B  primary text
+     --ink-soft    #5B6675  secondary text
+     --line        #DDE3EA  hairline borders
      --danger      #B3432B  errors (muted brick, not bright red)
-     --success     #2F6B4F  confirmations
 
    Type
-     Source Serif 4  — headings (editorial, report-grade gravitas)
+     Source Serif 4  — headings
      Inter           — body copy, UI labels, form fields
-     IBM Plex Mono   — eyebrows, nav labels, data/ids, small caps utility text
+     IBM Plex Mono   — eyebrows, nav labels, table headers, data
 
    Signature element
-     A five-segment tick rule (".tick-rule") under the wordmark on the
-     login card and in the sidebar footer — a quiet nod to progress
-     tracking without literal progress-bar cliché.
+     ".tick-rule" — a five-segment tick rule under the wordmark, a quiet
+     nod to progress tracking without a literal progress-bar cliché.
+
+   Layout
+     Top navbar (brand + account) + horizontal tab strip below it,
+     matching the org's existing information architecture. The tab
+     strip scrolls horizontally on narrow / Android widths instead of
+     wrapping or collapsing behind a menu, so every section stays one
+     tap away.
    ===================================================================== */
 
 * { box-sizing: border-box; }
 
 :root{
-  --bg:#F4F5F2;
+  --bg:#F2F5F9;
   --surface:#FFFFFF;
-  --sidebar:#12241F;
-  --sidebar-2:#1B342D;
-  --primary:#2F5C46;
-  --primary-dk:#234433;
-  --gold:#A9812E;
-  --ink:#1B211E;
-  --ink-soft:#5B655F;
-  --line:#DCE0DA;
+  --primary:#1D4E89;
+  --primary-dk:#153A66;
+  --accent:#4C8BC2;
+  --ink:#1B222B;
+  --ink-soft:#5B6675;
+  --line:#DDE3EA;
   --danger:#B3432B;
   --danger-bg:#FBEEEA;
-  --success:#2F6B4F;
   --radius:6px;
-  --shadow-card: 0 1px 2px rgba(18,36,31,0.06), 0 8px 24px rgba(18,36,31,0.05);
+  --shadow-card: 0 1px 2px rgba(20,40,70,0.05), 0 8px 24px rgba(20,40,70,0.06);
   --font-head:'Source Serif 4', Georgia, serif;
   --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono:'IBM Plex Mono', ui-monospace, monospace;
@@ -63,28 +63,16 @@ body{
 }
 
 h1,h2,h3{ font-family:var(--font-head); font-weight:600; color:var(--ink); margin:0; }
-
 a{ color:var(--primary); }
-
 button, input, select{ font-family:inherit; font-size:inherit; }
-
 .hidden{ display:none !important; }
 
 /* ---------------------------------------------------------------------
    Signature element — five-segment tick rule
    --------------------------------------------------------------------- */
-.tick-rule{
-  display:flex;
-  gap:5px;
-  margin:18px 0;
-}
-.tick-rule span{
-  height:3px;
-  flex:1;
-  background:var(--line);
-  border-radius:2px;
-}
-.tick-rule span:first-child{ background:var(--gold); }
+.tick-rule{ display:flex; gap:5px; margin:18px 0; }
+.tick-rule span{ height:3px; flex:1; background:var(--line); border-radius:2px; }
+.tick-rule span:first-child{ background:var(--accent); }
 
 /* =====================================================================
    LOGIN SCREEN
@@ -96,7 +84,7 @@ button, input, select{ font-family:inherit; font-size:inherit; }
   justify-content:center;
   padding:32px 20px;
   background:
-    radial-gradient(1100px 520px at 15% -10%, rgba(47,92,70,0.06), transparent 60%),
+    radial-gradient(1100px 520px at 15% -10%, rgba(29,78,137,0.06), transparent 60%),
     var(--bg);
 }
 
@@ -122,17 +110,9 @@ button, input, select{ font-family:inherit; font-size:inherit; }
   margin:0 0 10px;
 }
 
-.login-title{
-  font-size:28px;
-  line-height:1.15;
-  margin:0;
-}
+.login-title{ font-size:28px; line-height:1.15; margin:0; }
 
-.login-sub{
-  font-size:13.5px;
-  color:var(--ink-soft);
-  margin:10px 0 0;
-}
+.login-sub{ font-size:13.5px; color:var(--ink-soft); margin:10px 0 0; }
 
 .login-card .tick-rule{ margin:22px 0 26px; }
 
@@ -175,14 +155,10 @@ button, input, select{ font-family:inherit; font-size:inherit; }
 .field select:focus{
   outline:none;
   border-color:var(--primary);
-  box-shadow:0 0 0 3px rgba(47,92,70,0.14);
+  box-shadow:0 0 0 3px rgba(29,78,137,0.14);
 }
 
-.field .hint{
-  margin-top:6px;
-  font-size:12px;
-  color:var(--ink-soft);
-}
+.field .hint{ margin-top:6px; font-size:12px; color:var(--ink-soft); }
 
 .form-error{
   background:var(--danger-bg);
@@ -192,6 +168,34 @@ button, input, select{ font-family:inherit; font-size:inherit; }
   padding:10px 12px;
   font-size:13px;
   margin-bottom:18px;
+}
+
+/* 3-column responsive form grid, for views like "Add Contact" */
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:16px 20px;
+}
+.form-grid .field{ margin-bottom:0; }
+.form-grid .field.span-full{ grid-column:1 / -1; }
+
+.checkbox-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:18px;
+  margin-top:6px;
+}
+.checkbox-row label{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:13.5px;
+  color:var(--ink);
+  font-weight:500;
+}
+.checkbox-row input[type="checkbox"]{
+  width:16px; height:16px;
+  accent-color:var(--primary);
 }
 
 /* ---------------------------------------------------------------------
@@ -206,7 +210,7 @@ button, input, select{ font-family:inherit; font-size:inherit; }
   border-radius:4px;
   border:1px solid transparent;
   background:var(--primary);
-  color:#F4F5F2;
+  color:#F4F7FB;
   font-weight:600;
   font-size:14px;
   cursor:pointer;
@@ -214,7 +218,7 @@ button, input, select{ font-family:inherit; font-size:inherit; }
 }
 .btn:hover{ background:var(--primary-dk); }
 .btn:active{ transform:translateY(1px); }
-.btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+.btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 
 .btn-full{ width:100%; }
 
@@ -227,160 +231,139 @@ button, input, select{ font-family:inherit; font-size:inherit; }
 
 .btn-sm{ padding:8px 12px; font-size:13px; }
 
-/* Ghost buttons inside the dark sidebar need light-on-dark styling */
-.sidebar .btn-ghost{
-  color:#EDEFE9;
-  border-color:rgba(237,239,233,0.28);
+/* Ghost buttons on the dark blue header need light-on-dark styling */
+.topbar .btn-ghost{
+  color:#F4F7FB;
+  border-color:rgba(244,247,251,0.35);
 }
-.sidebar .btn-ghost:hover{ background:rgba(237,239,233,0.08); }
+.topbar .btn-ghost:hover{ background:rgba(244,247,251,0.12); }
 
 /* =====================================================================
-   APP SHELL
+   APP SHELL — top navbar + horizontal tab strip
    ===================================================================== */
-.app-shell{
-  display:grid;
-  grid-template-columns:248px 1fr;
-  min-height:100vh;
-}
+.app-shell{ display:flex; flex-direction:column; min-height:100vh; }
 
 /* ---------------------------------------------------------------------
-   Sidebar
+   Top bar: brand left, account + log out right
    --------------------------------------------------------------------- */
-.sidebar{
-  background:var(--sidebar);
-  color:#EDEFE9;
+.topbar{
+  background:var(--primary);
+  color:#F4F7FB;
   display:flex;
-  flex-direction:column;
-  padding:26px 22px;
-  position:sticky;
-  top:0;
-  height:100vh;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:14px 28px;
+  flex-wrap:wrap;
 }
 
-.sidebar-mark{ margin-bottom:8px; }
+.topbar-brand{ display:flex; flex-direction:column; line-height:1.25; }
 
-.sidebar-org{
+.topbar-org{
   font-family:var(--font-mono);
-  font-size:10.5px;
+  font-size:10px;
   font-weight:600;
   letter-spacing:0.08em;
   text-transform:uppercase;
-  color:#9AA79E;
-  margin:0 0 6px;
+  color:rgba(244,247,251,0.72);
 }
 
-.sidebar-app-name{
+.topbar-app{
   font-family:var(--font-head);
   font-size:19px;
   font-weight:600;
-  color:#F4F5F2;
-  margin:0;
+  color:#FFFFFF;
 }
 
-.sidebar .tick-rule{ margin:18px 0 22px; }
-.sidebar .tick-rule span{ background:rgba(237,239,233,0.14); }
-.sidebar .tick-rule span:first-child{ background:var(--gold); }
-
-.nav{
-  flex:1;
+.topbar-account{
   display:flex;
-  flex-direction:column;
-  gap:2px;
-  margin-top:6px;
+  align-items:center;
+  gap:16px;
 }
 
-.nav a, .nav button, .nav-item{
-  display:block;
-  width:100%;
-  text-align:left;
-  padding:10px 12px;
-  border-radius:4px;
-  color:#C7CFC9;
-  background:transparent;
-  border:none;
-  font-size:13.5px;
-  font-weight:500;
-  cursor:pointer;
-  text-decoration:none;
-  transition:background .15s ease, color .15s ease;
-}
+.account-info{ display:flex; flex-direction:column; align-items:flex-end; line-height:1.3; }
 
-.nav a:hover, .nav button:hover, .nav-item:hover{
-  background:var(--sidebar-2);
-  color:#F4F5F2;
-}
-
-.nav a.active, .nav-item.active{
-  background:var(--sidebar-2);
-  color:#F4F5F2;
-  box-shadow:inset 3px 0 0 var(--gold);
-}
-
-.sidebar-footer{
-  border-top:1px solid rgba(237,239,233,0.14);
-  padding-top:16px;
-  margin-top:16px;
-}
-
-.sidebar-user{
-  font-size:13.5px;
-  font-weight:600;
-  color:#F4F5F2;
-}
+.sidebar-user{ font-size:13.5px; font-weight:600; color:#FFFFFF; }
 
 .sidebar-role{
   font-family:var(--font-mono);
-  font-size:11px;
-  letter-spacing:0.04em;
+  font-size:10.5px;
+  letter-spacing:0.05em;
   text-transform:uppercase;
-  color:#9AA79E;
-  margin:2px 0 14px;
+  color:rgba(244,247,251,0.72);
 }
 
 /* ---------------------------------------------------------------------
-   Main / topbar / content
+   Horizontal tab navigation
+   Scrolls on narrow / Android widths instead of wrapping behind a menu,
+   so every tab stays reachable with a swipe.
    --------------------------------------------------------------------- */
-.main{ display:flex; flex-direction:column; min-width:0; }
-
-.topbar{
-  padding:28px 36px 20px;
-  border-bottom:1px solid var(--line);
+.tabnav{
   background:var(--surface);
+  border-bottom:1px solid var(--line);
+  display:flex;
+  gap:4px;
+  padding:0 24px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
 }
+.tabnav::-webkit-scrollbar{ display:none; }
 
-.topbar h1{ font-size:23px; }
-
-.topbar .subtitle{
-  margin-top:5px;
-  font-size:13.5px;
+.tabnav a, .tabnav button, .tab-item{
+  flex:0 0 auto;
+  white-space:nowrap;
+  padding:14px 14px 12px;
+  border:none;
+  background:transparent;
   color:var(--ink-soft);
+  font-size:13.5px;
+  font-weight:600;
+  border-bottom:2.5px solid transparent;
+  cursor:pointer;
+  text-decoration:none;
 }
 
-#content{
-  padding:28px 36px 48px;
-  flex:1;
+.tabnav a:hover, .tabnav button:hover, .tab-item:hover{ color:var(--primary); }
+
+.tabnav a.active, .tab-item.active{
+  color:var(--primary);
+  border-bottom-color:var(--primary);
 }
 
 /* ---------------------------------------------------------------------
-   Generic content components (cards, tables, badges) available to
-   JS-rendered views inside #content
+   Main / page header / content
+   --------------------------------------------------------------------- */
+.main{ flex:1; padding:24px 28px 48px; max-width:1180px; width:100%; margin:0 auto; }
+
+.page-header{ margin-bottom:18px; }
+.page-header h1{ font-size:21px; }
+.page-header .subtitle{ margin-top:4px; font-size:13.5px; color:var(--ink-soft); }
+.page-header:empty{ display:none; }
+
+/* ---------------------------------------------------------------------
+   Cards, tables, badges — used by JS-rendered views inside #content
    --------------------------------------------------------------------- */
 .card{
   background:var(--surface);
   border:1px solid var(--line);
   border-radius:var(--radius);
   box-shadow:var(--shadow-card);
-  padding:20px 22px;
-  margin-bottom:20px;
+  padding:22px 24px;
+  margin-bottom:22px;
 }
 
-.card h2, .card h3{ margin-bottom:4px; }
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:var(--surface);
+.card-header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:18px;
 }
+.card-header h2, .card-header h3{ font-size:16px; }
+
+.table-wrapper{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+table{ width:100%; border-collapse:collapse; background:var(--surface); min-width:560px; }
 
 th{
   text-align:left;
@@ -392,14 +375,10 @@ th{
   color:var(--ink-soft);
   padding:10px 14px;
   border-bottom:1px solid var(--line);
+  white-space:nowrap;
 }
 
-td{
-  padding:12px 14px;
-  border-bottom:1px solid var(--line);
-  font-size:13.5px;
-}
-
+td{ padding:12px 14px; border-bottom:1px solid var(--line); font-size:13.5px; }
 tr:last-child td{ border-bottom:none; }
 
 .badge{
@@ -408,25 +387,20 @@ tr:last-child td{ border-bottom:none; }
   border-radius:999px;
   font-size:11.5px;
   font-weight:600;
-  background:rgba(47,92,70,0.1);
+  background:rgba(29,78,137,0.1);
   color:var(--primary-dk);
 }
-.badge.warn{ background:rgba(169,129,46,0.14); color:#7A5D22; }
+.badge.warn{ background:rgba(76,139,194,0.14); color:#215680; }
 .badge.danger{ background:var(--danger-bg); color:var(--danger); }
 
-.empty-state{
-  text-align:center;
-  padding:48px 20px;
-  color:var(--ink-soft);
-  font-size:13.5px;
-}
+.empty-state{ text-align:center; padding:48px 20px; color:var(--ink-soft); font-size:13.5px; }
 
 /* ---------------------------------------------------------------------
    Modal / toast roots
    --------------------------------------------------------------------- */
 #modal-root:not(:empty){
   position:fixed; inset:0;
-  background:rgba(18,36,31,0.45);
+  background:rgba(20,40,70,0.45);
   display:flex; align-items:center; justify-content:center;
   padding:20px;
   z-index:50;
@@ -440,26 +414,26 @@ tr:last-child td{ border-bottom:none; }
 }
 
 /* =====================================================================
-   RESPONSIVE
+   RESPONSIVE — Android / narrow-width handling
    ===================================================================== */
 @media (max-width:860px){
-  .app-shell{ grid-template-columns:1fr; }
-  .sidebar{
-    position:relative;
-    height:auto;
-    flex-direction:row;
-    align-items:center;
-    flex-wrap:wrap;
-    gap:14px;
-  }
-  .sidebar-mark{ margin-bottom:0; }
-  .nav{ flex-direction:row; flex-wrap:wrap; margin-top:0; }
-  .sidebar-footer{ width:100%; }
-  .topbar, #content{ padding-left:20px; padding-right:20px; }
+  .form-grid{ grid-template-columns:repeat(2, 1fr); }
+}
+
+@media (max-width:680px){
+  .topbar{ padding:12px 16px; }
+  .topbar-app{ font-size:17px; }
+  .account-info{ display:none; } /* role/name still visible via profile view; keeps header compact */
+  .tabnav{ padding:0 16px; }
+  .main{ padding:18px 16px 40px; }
+  .card{ padding:18px 16px; }
+  .form-grid{ grid-template-columns:1fr; }
+  .checkbox-row{ gap:12px; }
 }
 
 @media (max-width:480px){
   .login-card{ padding:30px 24px 26px; }
+  .topbar-org{ font-size:9px; }
 }
 
 /* Respect reduced-motion preference */
