@@ -47,28 +47,30 @@
     </div>
   </section>
 
-  <!-- ===================== APP SHELL ===================== -->
+  <!-- ===================== APP SHELL (top navbar layout) ===================== -->
   <div id="app-shell" class="app-shell hidden">
-    <aside class="sidebar">
-      <div class="sidebar-mark">
-        <p class="sidebar-org">Upskill Africa Foundation</p>
-        <p class="sidebar-app-name">Tasks Tracker</p>
+
+    <header class="topbar">
+      <div class="topbar-brand">
+        <span class="topbar-org">Upskill Africa Foundation</span>
+        <span class="topbar-app">Tasks Tracker</span>
       </div>
-
-      <nav class="nav" id="nav"></nav>
-
-      <div class="sidebar-footer">
-        <div class="sidebar-user" id="sidebar-user"></div>
-        <div class="sidebar-role" id="sidebar-role"></div>
+      <div class="topbar-account">
+        <div class="account-info">
+          <span class="sidebar-user" id="sidebar-user"></span>
+          <span class="sidebar-role" id="sidebar-role"></span>
+        </div>
         <button class="btn btn-ghost btn-sm" id="logout-btn">Log out</button>
       </div>
-    </aside>
+    </header>
+
+    <nav class="tabnav" id="nav"></nav>
 
     <main class="main">
-      <header class="topbar">
+      <div class="page-header">
         <h1 id="page-title">—</h1>
         <div class="subtitle" id="page-subtitle"></div>
-      </header>
+      </div>
       <div id="content"></div>
     </main>
   </div>
