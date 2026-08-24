@@ -8,7 +8,7 @@
  *************************************************************/
 const Api = (() => {
   async function call(action, params = {}) {
-    if (!CONFIG.API_URL || CONFIG.API_URL.indexOf(YOUR_URL) === 0) {
+    if (!CONFIG.API_URL) {
       throw new Error('This app has not been configured yet — set API_URL in js/config.js.');
     }
     let res;
@@ -29,7 +29,6 @@ const Api = (() => {
     }
     return data;
   }
-
   // Same call, but throws a readable Error when the backend replies
   // { success:false }. Convenient for actions where a failure should
   // just surface as a caught error (forms, buttons, etc).
@@ -40,6 +39,5 @@ const Api = (() => {
     }
     return data;
   }
-
   return { call, callOrThrow };
 })();
