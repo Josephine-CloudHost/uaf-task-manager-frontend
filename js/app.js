@@ -1,5 +1,7 @@
 /*************************************************************
  * APP — routing, auth, and every tab's view + actions.
+ * TRIMMED VERSION: Admin + Coordinator logins only.
+ * Tabs: Contacts, Tasks, Team logins, Announcements, Reports (PDF), Account.
  *************************************************************/
 'use strict';
 
@@ -8,56 +10,29 @@ const State = {
   role: null,
   fullName: null,
   username: null,
-  config: { projectOptions: [], categoryOptions: [], typeOptions: [], roleOptions: [], docTypeOptions: [] },
+  config: { projectOptions: [], categoryOptions: [], typeOptions: [], roleOptions: [] },
   activeTab: null,
-  contactsCache: null, // small perf win: several tabs need the contact list
+  contactsCache: null,
 };
 
-const STATUS_OPTIONS = ['Pending', 'In Progress', 'Completed', 'Cancelled', 'Reassigned'];
+const STATUS_OPTIONS = ['Pending', 'In Progress', 'Completed', 'Cancelled'];
 
 /* ===================== NAV CONFIG ===================== */
 const NAV_BY_ROLE = {
   Admin: [
-    { key: 'contacts', label: 'Contacts', icon: '◆' },
-    { key: 'tasks', label: 'Tasks', icon: '◆' },
-    { key: 'team', label: 'Team logins', icon: '◆' },
-    { key: 'updates', label: 'Announcements', icon: '◆' },
-    { key: 'documents', label: 'Documents', icon: '◆' },
-    { key: 'reassign', label: 'Reassignment requests', icon: '◆' },
-    { key: 'comments', label: 'All comments', icon: '◆' },
-    { key: 'reports', label: 'Reports (PDF)', icon: '◆' },
-    { key: 'account', label: 'Account', icon: '◆' },
+    { key: 'contacts', label: 'Contacts' },
+    { key: 'tasks', label: 'Tasks' },
+    { key: 'team', label: 'Team logins' },
+    { key: 'updates', label: 'Announcements' },
+    { key: 'reports', label: 'Reports (PDF)' },
+    { key: 'account', label: 'Account' },
   ],
   Coordinator: [
-    { key: 'contacts', label: 'Contacts', icon: '◆' },
-    { key: 'tasks', label: 'Tasks', icon: '◆' },
-    { key: 'updates', label: 'Announcements', icon: '◆' },
-    { key: 'documents', label: 'Documents', icon: '◆' },
-    { key: 'account', label: 'Account', icon: '◆' },
-  ],
-  Implementer: [
-    { key: 'mytasks', label: 'My tasks', icon: '◆' },
-    { key: 'mydocuments', label: 'Reports', icon: '◆' },
-    { key: 'myupdates', label: 'Announcements', icon: '◆' },
-    { key: 'account', label: 'Account', icon: '◆' },
-  ],
-  Partners: [
-    { key: 'mydocuments', label: 'Reports', icon: '◆' },
-    { key: 'myupdates', label: 'Announcements', icon: '◆' },
-    { key: 'mycomments', label: 'Comments', icon: '◆' },
-    { key: 'account', label: 'Account', icon: '◆' },
-  ],
-  Donor: [
-    { key: 'mydocuments', label: 'Reports', icon: '◆' },
-    { key: 'myupdates', label: 'Announcements', icon: '◆' },
-    { key: 'mycomments', label: 'Comments', icon: '◆' },
-    { key: 'account', label: 'Account', icon: '◆' },
-  ],
-  Supporter: [
-    { key: 'mydocuments', label: 'Reports', icon: '◆' },
-    { key: 'myupdates', label: 'Announcements', icon: '◆' },
-    { key: 'mycomments', label: 'Comments', icon: '◆' },
-    { key: 'account', label: 'Account', icon: '◆' },
+    { key: 'contacts', label: 'Contacts' },
+    { key: 'tasks', label: 'Tasks' },
+    { key: 'updates', label: 'Announcements' },
+    { key: 'reports', label: 'Reports (PDF)' },
+    { key: 'account', label: 'Account' },
   ],
 };
 
@@ -66,15 +41,8 @@ const TAB_TITLES = {
   tasks: ['Tasks', 'Assignments tracked from kickoff to close-out.'],
   team: ['Team logins', 'Who can sign in, and what they can see.'],
   updates: ['Announcements', 'Send project updates and announcements to contacts.'],
-  documents: ['Documents', 'Meeting minutes, reports, and files shared with contacts.'],
-  reassign: ['Reassignment requests', 'Deadline and ownership changes requested by implementers.'],
-  comments: ['All comments', 'Every comment left across documents, for oversight.'],
-  reports: ['Reports', 'Export data to PDF.'],
+  reports: ['Reports', 'Export Contacts or Tasks to PDF.'],
   account: ['Account', 'Your login details.'],
-  mytasks: ['My tasks', 'Tasks assigned to you.'],
-  mydocuments: ['Reports', 'Documents shared with your organization.'],
-  myupdates: ['Announcements', 'Project updates sent to you.'],
-  mycomments: ['Comments', 'Leave feedback and see what you\u2019ve said before.'],
 };
 
 /* ===================== UTILITIES ===================== */
@@ -101,7 +69,7 @@ function toast(message, type = '') {
   const root = document.getElementById('toast-root');
   if (!root) return;
   const el = document.createElement('div');
-  el.className = 'form-error' + (type === 'success' ? '' : '');
+  el.className = 'form-error';
   if (type === 'success') {
     el.style.background = '#E8F0F9';
     el.style.color = 'var(--primary-dk)';
@@ -129,7 +97,7 @@ function statusBadgeClass(status) {
 
 function isOverdue(task) {
   if (!task.Deadline) return false;
-  if (['Completed', 'Cancelled', 'Reassigned'].includes(task.Status)) return false;
+  if (['Completed', 'Cancelled'].includes(task.Status)) return false;
   return new Date(task.Deadline).getTime() < Date.now();
 }
 
@@ -180,9 +148,7 @@ function setupDrawer({ drawerEl, onOpen, onSubmit, onClose }) {
     if (onClose) onClose();
   };
 
-  drawerEl.querySelectorAll('.drawer-cancel-btn').forEach(btn => {
-    btn.onclick = closeDrawer;
-  });
+  drawerEl.querySelectorAll('.drawer-cancel-btn').forEach(btn => { btn.onclick = closeDrawer; });
 
   if (form && onSubmit) {
     form.onsubmit = async (e) => {
@@ -204,10 +170,7 @@ function setupDrawer({ drawerEl, onOpen, onSubmit, onClose }) {
   }
 
   return {
-    open: () => {
-      drawerEl.classList.add('open');
-      if (onOpen) onOpen();
-    },
+    open: () => { drawerEl.classList.add('open'); if (onOpen) onOpen(); },
     close: closeDrawer,
   };
 }
@@ -284,10 +247,7 @@ async function init() {
     State.fullName = saved.fullName; State.username = saved.username;
     try {
       const info = await Api.call('getSessionInfo', { token: State.token });
-      if (info && info.success) {
-        showApp();
-        return;
-      }
+      if (info && info.success) { showApp(); return; }
     } catch (e) { /* fall through to login */ }
     clearSession();
   }
@@ -352,13 +312,8 @@ function buildNav() {
   const nav = document.getElementById('nav');
   if (!nav) return;
   const items = NAV_BY_ROLE[State.role] || [];
-  nav.innerHTML = items.map(it => `
-    <button class="tab-item" data-tab="${it.key}">
-      ${escapeHtml(it.label)}
-    </button>`).join('');
-  nav.querySelectorAll('.tab-item').forEach(btn => {
-    btn.addEventListener('click', () => navigate(btn.dataset.tab));
-  });
+  nav.innerHTML = items.map(it => `<button class="tab-item" data-tab="${it.key}">${escapeHtml(it.label)}</button>`).join('');
+  nav.querySelectorAll('.tab-item').forEach(btn => btn.addEventListener('click', () => navigate(btn.dataset.tab)));
 }
 
 function navigate(tab) {
@@ -382,14 +337,14 @@ async function fetchContacts(force = false) {
   return State.contactsCache;
 }
 
-/* ===================== TAB: CONTACTS (Admin/Coordinator) ===================== */
+/* ===================== TAB: CONTACTS ===================== */
 async function renderContacts() {
   setLoading();
   let contacts;
   try { contacts = await fetchContacts(true); }
   catch (err) { document.getElementById('content').innerHTML = emptyState('Could not load contacts', err.message); return; }
 
-  const canEdit = State.role === 'Admin';
+  const canDelete = State.role === 'Admin';
   const drawerFormBody = `
     <div class="form-grid">
       <div class="field span-full"><label>Name</label><input type="text" name="Name" required></div>
@@ -410,18 +365,16 @@ async function renderContacts() {
       <td>${escapeHtml(c.Category)}</td>
       <td>${escapeHtml(c.Type)}</td>
       <td>${projectStamps(c.Projects)}</td>
-      <td class="row-actions">
-        ${canEdit ? `<button class="btn btn-ghost btn-sm" data-del="${escapeHtml(c.ContactId)}">Delete</button>` : ''}
-      </td>
+      <td class="row-actions">${canDelete ? `<button class="btn btn-ghost btn-sm" data-del="${escapeHtml(c.ContactId)}">Delete</button>` : ''}</td>
     </tr>`).join('');
 
   document.getElementById('content').innerHTML = `
     <div class="card">
       <div class="card-header">
         <h2>Contacts (${contacts.length})</h2>
-        ${canEdit ? '<button class="btn btn-sm" id="add-contact-btn">+ Add contact</button>' : ''}
+        <button class="btn btn-sm" id="add-contact-btn">+ Add contact</button>
       </div>
-      ${canEdit ? buildDrawerHtml({ id: 'contact-drawer', title: 'Add new contact', formBodyHtml: drawerFormBody, submitLabel: 'Add contact' }) : ''}
+      ${buildDrawerHtml({ id: 'contact-drawer', title: 'Add new contact', formBodyHtml: drawerFormBody, submitLabel: 'Add contact' })}
       <div class="table-wrapper">
         <table>
           <thead><tr><th>Name</th><th>Tel</th><th>Email</th><th>Org</th><th>Category</th><th>Type</th><th>Projects</th><th></th></tr></thead>
@@ -430,24 +383,23 @@ async function renderContacts() {
       </div>
     </div>`;
 
-  if (canEdit) {
-    const drawerController = setupDrawer({
-      drawerEl: document.getElementById('contact-drawer'),
-      onSubmit: async (fd, close) => {
-        const payload = {
-          Name: fd.get('Name'), Tel: fd.get('Tel'), Email: fd.get('Email'),
-          AffiliateOrg: fd.get('AffiliateOrg'), Category: fd.get('Category'), Type: fd.get('Type'),
-          Projects: fd.getAll('Projects'),
-        };
-        await authedCall('addContact', { contact: payload });
-        toast('Contact added.', 'success');
-        close();
-        renderContacts();
-      }
-    });
+  const drawerController = setupDrawer({
+    drawerEl: document.getElementById('contact-drawer'),
+    onSubmit: async (fd, close) => {
+      const payload = {
+        Name: fd.get('Name'), Tel: fd.get('Tel'), Email: fd.get('Email'),
+        AffiliateOrg: fd.get('AffiliateOrg'), Category: fd.get('Category'), Type: fd.get('Type'),
+        Projects: fd.getAll('Projects'),
+      };
+      await authedCall('addContact', { contact: payload });
+      toast('Contact added.', 'success');
+      close();
+      renderContacts();
+    }
+  });
+  document.getElementById('add-contact-btn').addEventListener('click', () => drawerController.open());
 
-    document.getElementById('add-contact-btn').addEventListener('click', () => drawerController.open());
-
+  if (canDelete) {
     document.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
       if (!confirm('Delete this contact? This cannot be undone.')) return;
       try { await authedCall('deleteContact', { contactId: b.dataset.del }); toast('Contact deleted.', 'success'); renderContacts(); }
@@ -456,13 +408,12 @@ async function renderContacts() {
   }
 }
 
-/* ===================== TAB: TASKS (Admin/Coordinator) ===================== */
+/* ===================== TAB: TASKS ===================== */
 async function renderTasks() {
   setLoading();
   let tasks, contacts = [];
-  try {
-    [tasks, contacts] = await Promise.all([authedCall('getTasks'), fetchContacts()]);
-  } catch (err) { document.getElementById('content').innerHTML = emptyState('Could not load tasks', err.message); return; }
+  try { [tasks, contacts] = await Promise.all([authedCall('getTasks'), fetchContacts()]); }
+  catch (err) { document.getElementById('content').innerHTML = emptyState('Could not load tasks', err.message); return; }
   if (!Array.isArray(tasks)) tasks = [];
 
   const canManage = State.role === 'Admin';
@@ -509,17 +460,13 @@ async function renderTasks() {
     drawerEl: document.getElementById('task-drawer'),
     onSubmit: async (fd, close) => {
       await authedCall('addTask', {
-        task: {
-          Title: fd.get('Title'), Description: fd.get('Description'),
-          ContactId: fd.get('ContactId'), Project: fd.get('Project'), Deadline: fd.get('Deadline'),
-        },
+        task: { Title: fd.get('Title'), Description: fd.get('Description'), ContactId: fd.get('ContactId'), Project: fd.get('Project'), Deadline: fd.get('Deadline') },
       });
       toast('Task assigned.', 'success');
       close();
       renderTasks();
     }
   });
-
   document.getElementById('add-task-btn').addEventListener('click', () => drawerController.open());
 
   document.querySelectorAll('[data-status]').forEach(sel => sel.addEventListener('change', async () => {
@@ -528,16 +475,14 @@ async function renderTasks() {
   }));
 }
 
-/* ===================== TAB: TEAM LOGINS (Admin) ===================== */
+/* ===================== TAB: TEAM LOGINS (Admin only) ===================== */
 async function renderTeam() {
   setLoading();
-  let users, contacts = [];
-  try {
-    [users, contacts] = await Promise.all([authedCall('getUsers'), fetchContacts()]);
-  } catch (err) { document.getElementById('content').innerHTML = emptyState('Could not load team logins', err.message); return; }
+  let users;
+  try { users = await authedCall('getUsers'); }
+  catch (err) { document.getElementById('content').innerHTML = emptyState('Could not load team logins', err.message); return; }
   if (!Array.isArray(users)) users = [];
 
-  const contactOptions = contacts.map(c => `<option value="${escapeHtml(c.ContactId)}">${escapeHtml(c.Name)}</option>`).join('');
   const drawerFormBody = `
     <div class="form-grid">
       <div class="field"><label>Username</label><input type="text" name="username" required></div>
@@ -545,11 +490,6 @@ async function renderTeam() {
       <div class="field"><label>Role</label><select name="role" id="user-role-select">${selectOptionsHtml(State.config.roleOptions)}</select></div>
       <div class="field span-full"><label>Full name</label><input type="text" name="fullName" required></div>
       <div class="field span-full"><label>Email</label><input type="email" name="email"></div>
-      <div class="field span-full" id="user-contact-field">
-        <label>Linked contact</label>
-        <select name="contactId"><option value="">Select a contact\u2026</option>${contactOptions}</select>
-        <div class="hint">Required for Partners, Donor, Supporter, and Implementer logins.</div>
-      </div>
       <div class="field span-full hidden" id="user-coord-projects-field">
         <label>Assigned project(s)</label>
         ${checklistHtml('assignedProjects', State.config.projectOptions, [])}
@@ -557,11 +497,9 @@ async function renderTeam() {
     </div>`;
 
   const rows = users.map(u => {
-    const scopeBits = [];
-    if (u.AssignedProjects) scopeBits.push(projectStamps(u.AssignedProjects));
     const scopeCell = u.Role === 'Coordinator'
-      ? (scopeBits.length ? scopeBits.join(' ') : '<span style="color:var(--ink-soft)">Unscoped</span>')
-      : (escapeHtml(u.ContactName) || '<span style="color:var(--ink-soft)">\u2014</span>');
+      ? (u.AssignedProjects ? projectStamps(u.AssignedProjects) : '<span style="color:var(--ink-soft)">Unscoped</span>')
+      : '<span style="color:var(--ink-soft)">All</span>';
     return `
     <tr>
       <td><strong>${escapeHtml(u.Username)}</strong></td>
@@ -586,17 +524,13 @@ async function renderTeam() {
       ${buildDrawerHtml({ id: 'user-drawer', title: 'Create new user login', formBodyHtml: drawerFormBody, submitLabel: 'Create login' })}
       <div class="table-wrapper">
         <table>
-          <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Email</th><th>Linked contact / scope</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Email</th><th>Assigned project(s)</th><th>Status</th><th></th></tr></thead>
           <tbody>${rows || `<tr><td colspan="7">${emptyState('No logins yet')}</td></tr>`}</tbody>
         </table>
       </div>
     </div>`;
 
-  const needsLinkRoles = ['Partners', 'Donor', 'Supporter', 'Implementer'];
-
-  // Tracks which user (if any) we're editing. null = "create" mode.
   let editingUserId = null;
-
   const drawerEl = document.getElementById('user-drawer');
   const drawerTitleEl = drawerEl.querySelector('.drawer-panel-header h3');
   const submitBtn = drawerEl.querySelector('button[type="submit"]');
@@ -607,66 +541,47 @@ async function renderTeam() {
     onOpen: () => {
       const form = drawerEl.querySelector('.drawer-form');
       const roleSelect = document.getElementById('user-role-select');
-      const contactField = document.getElementById('user-contact-field');
       const coordProjectsField = document.getElementById('user-coord-projects-field');
 
       const syncRoleFields = () => {
         if (!roleSelect) return;
-        contactField.style.display = needsLinkRoles.includes(roleSelect.value) ? '' : 'none';
-        const isCoordinator = roleSelect.value === 'Coordinator';
-        coordProjectsField.classList.toggle('hidden', !isCoordinator);
+        coordProjectsField.classList.toggle('hidden', roleSelect.value !== 'Coordinator');
       };
-      if (roleSelect) {
-        roleSelect.onchange = syncRoleFields;
-      }
+      if (roleSelect) roleSelect.onchange = syncRoleFields;
 
       if (editingUserId) {
-        // EDIT MODE: pre-fill the form from the selected user
         const user = users.find(u => u.UserId === editingUserId);
         if (user) {
           form.username.value = user.Username;
-          form.username.disabled = true;              // usernames aren't editable
-          passwordField.required = false;              // don't force a password change
+          form.username.disabled = true;
+          passwordField.required = false;
           passwordField.placeholder = 'Leave blank to keep current password';
           form.fullName.value = user.FullName || '';
           form.email.value = user.Email || '';
           if (roleSelect) roleSelect.value = user.Role;
-          if (form.contactId) {
-            const contact = contacts.find(c => c.Name === user.ContactName);
-            form.contactId.value = contact ? contact.ContactId : '';
-          }
           if (user.Role === 'Coordinator' && user.AssignedProjects) {
             const assigned = String(user.AssignedProjects).split(',').map(s => s.trim());
-            form.querySelectorAll('input[name="assignedProjects"]').forEach(cb => {
-              cb.checked = assigned.includes(cb.value);
-            });
+            form.querySelectorAll('input[name="assignedProjects"]').forEach(cb => { cb.checked = assigned.includes(cb.value); });
           }
         }
         drawerTitleEl.textContent = 'Edit user login';
         submitBtn.textContent = 'Save changes';
       } else {
-        // CREATE MODE: reset everything back to defaults
         form.username.disabled = false;
         passwordField.required = true;
         passwordField.placeholder = '';
         drawerTitleEl.textContent = 'Create new user login';
         submitBtn.textContent = 'Create login';
       }
-
       syncRoleFields();
     },
     onSubmit: async (fd, close) => {
       const role = fd.get('role');
-      const data = {
-        username: fd.get('username'), password: fd.get('password'), fullName: fd.get('fullName'),
-        email: fd.get('email'), role, contactId: fd.get('contactId'),
-      };
-      if (role === 'Coordinator') {
-        data.assignedProjects = fd.getAll('assignedProjects');
-      }
+      const data = { username: fd.get('username'), password: fd.get('password'), fullName: fd.get('fullName'), email: fd.get('email'), role };
+      if (role === 'Coordinator') data.assignedProjects = fd.getAll('assignedProjects');
 
       if (editingUserId) {
-        if (!data.password) delete data.password; // don't overwrite password if left blank
+        if (!data.password) delete data.password;
         await authedCall('updateUser', { userId: editingUserId, data });
         toast('Login updated.', 'success');
       } else {
@@ -685,58 +600,40 @@ async function renderTeam() {
     }
   });
 
-  document.getElementById('add-user-btn').addEventListener('click', () => {
-    editingUserId = null;
-    drawerController.open();
-  });
-
-  document.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => {
-    editingUserId = b.dataset.edit;
-    drawerController.open();
-  }));
-
+  document.getElementById('add-user-btn').addEventListener('click', () => { editingUserId = null; drawerController.open(); });
+  document.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => { editingUserId = b.dataset.edit; drawerController.open(); }));
   document.querySelectorAll('[data-toggle]').forEach(b => b.addEventListener('click', async () => {
     try { await authedCall('setUserActive', { userId: b.dataset.toggle, active: b.dataset.active !== '1' }); toast('Updated.', 'success'); renderTeam(); }
     catch (err) { toast(err.message, 'error'); }
   }));
 }
-/* ===================== TAB: UPDATES / ANNOUNCEMENTS (Admin/Coordinator) ===================== */
+
+/* ===================== TAB: UPDATES / ANNOUNCEMENTS ===================== */
 async function renderUpdates() {
   setLoading();
   let history, contacts;
-  try {
-    [history, contacts] = await Promise.all([authedCall('getUpdateHistory'), fetchContacts()]);
-  } catch (err) { document.getElementById('content').innerHTML = emptyState('Could not load announcements', err.message); return; }
+  try { [history, contacts] = await Promise.all([authedCall('getUpdateHistory'), fetchContacts()]); }
+  catch (err) { document.getElementById('content').innerHTML = emptyState('Could not load announcements', err.message); return; }
   if (!Array.isArray(history)) history = [];
 
-  const rows = history
-    .slice()
-    .sort((a, b) => new Date(b.SentDate) - new Date(a.SentDate))
-    .map(u => `
+  const rows = history.slice().sort((a, b) => new Date(b.SentDate) - new Date(a.SentDate)).map(u => `
     <tr>
       <td>${escapeHtml(u.Type)}</td>
       <td>${projectStamps(u.Project)}</td>
       <td>${escapeHtml(u.SentBy)}</td>
       <td>${fmtDateTime(u.SentDate)}</td>
       <td><span class="badge">${escapeHtml(u.Status)}</span></td>
-      ${State.role === 'Admin' ? `<td><button class="btn btn-ghost btn-sm" data-pdf="${escapeHtml(u.UpdateId)}">Export PDF</button></td>` : '<td></td>'}
     </tr>`).join('');
 
   document.getElementById('content').innerHTML = `
     <div class="card">
-      <div class="card-header">
-        <h2>Send a new update</h2>
-      </div>
+      <div class="card-header"><h2>Send a new update</h2></div>
       <form id="update-form">
         <div class="form-grid">
-          <div class="field"><label>Type</label>
-            <select name="type"><option>Update</option><option>Announcement</option></select>
-          </div>
+          <div class="field"><label>Type</label><select name="type"><option>Update</option><option>Announcement</option></select></div>
           <div class="field"><label>Project</label><select name="project">${selectOptionsHtml(State.config.projectOptions)}</select></div>
           <div class="field span-full"><label>Message</label><textarea name="message" class="field" style="width:100%; min-height:80px;" required></textarea></div>
-          <div class="field span-full"><label>Recipients</label>
-            ${checklistHtml('recipientIds', contacts.map(c => c.Name), [])}
-          </div>
+          <div class="field span-full"><label>Recipients</label>${checklistHtml('recipientIds', contacts.map(c => c.Name), [])}</div>
         </div>
         <div id="update-error" class="form-error hidden" style="margin-top:12px;"></div>
         <div id="update-preview"></div>
@@ -747,13 +644,11 @@ async function renderUpdates() {
       </form>
     </div>
     <div class="card">
-      <div class="card-header">
-        <h2>Announcement History</h2>
-      </div>
+      <div class="card-header"><h2>Announcement History</h2></div>
       <div class="table-wrapper">
         <table>
-          <thead><tr><th>Type</th><th>Project</th><th>Sent by</th><th>Sent</th><th>Status</th><th></th></tr></thead>
-          <tbody>${rows || `<tr><td colspan="6">${emptyState('No announcements sent yet')}</td></tr>`}</tbody>
+          <thead><tr><th>Type</th><th>Project</th><th>Sent by</th><th>Sent</th><th>Status</th></tr></thead>
+          <tbody>${rows || `<tr><td colspan="5">${emptyState('No announcements sent yet')}</td></tr>`}</tbody>
         </table>
       </div>
     </div>`;
@@ -761,10 +656,10 @@ async function renderUpdates() {
   const form = document.getElementById('update-form');
   document.getElementById('preview-btn').addEventListener('click', async () => {
     const fd = new FormData(form);
-    const recipientIndexes = fd.getAll('recipientIds');
-    if (!recipientIndexes.length) { toast('Select at least one recipient to preview.', 'error'); return; }
+    const recipientNames = fd.getAll('recipientIds');
+    if (!recipientNames.length) { toast('Select at least one recipient to preview.', 'error'); return; }
     try {
-      const recipientIds = recipientIndexes.map(idx => contacts.find(c => c.Name === idx)?.ContactId).filter(Boolean);
+      const recipientIds = recipientNames.map(name => contacts.find(c => c.Name === name)?.ContactId).filter(Boolean);
       const previews = await authedCall('previewUpdateEmails', { payload: { type: fd.get('type'), project: fd.get('project'), message: fd.get('message'), recipientIds } });
       document.getElementById('update-preview').innerHTML = `
         <div class="card" style="margin-top:12px; background:var(--bg);">
@@ -785,18 +680,83 @@ async function renderUpdates() {
     if (!recipientIds.length) { errEl.textContent = 'Select at least one recipient.'; errEl.classList.remove('hidden'); return; }
     if (!confirm(`Send this to ${recipientIds.length} recipient(s)?`)) return;
     try {
-      await authedCall('sendUpdateEmails', {
-        payload: {
-          type: fd.get('type'),
-          project: fd.get('project'),
-          message: fd.get('message'),
-          recipientIds,
-        }
-      });
+      await authedCall('sendUpdateEmails', { payload: { type: fd.get('type'), project: fd.get('project'), message: fd.get('message'), recipientIds } });
       toast('Update sent successfully.', 'success');
       renderUpdates();
     } catch (err) {
       errEl.textContent = err.message || 'Failed to send update.';
+      errEl.classList.remove('hidden');
+    }
+  });
+}
+
+/* ===================== TAB: REPORTS (PDF — Contacts + Tasks only) ===================== */
+function downloadPdfFromResponse(data) {
+  if (!data || !data.success) { toast((data && data.message) || 'Could not generate PDF.', 'error'); return; }
+  const link = document.createElement('a');
+  link.href = 'data:application/pdf;base64,' + data.base64Data;
+  link.download = data.fileName || 'export.pdf';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function renderReports() {
+  document.getElementById('content').innerHTML = `
+    <div class="card">
+      <div class="card-header"><h2>Export to PDF</h2></div>
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <button class="btn" id="export-contacts-btn">Export Contacts PDF</button>
+        <button class="btn" id="export-tasks-btn">Export Tasks PDF</button>
+      </div>
+    </div>`;
+
+  document.getElementById('export-contacts-btn').addEventListener('click', async (e) => {
+    e.target.disabled = true; e.target.textContent = 'Generating\u2026';
+    try { downloadPdfFromResponse(await authedCall('exportContactsPdf')); }
+    catch (err) { toast(err.message, 'error'); }
+    finally { e.target.disabled = false; e.target.textContent = 'Export Contacts PDF'; }
+  });
+
+  document.getElementById('export-tasks-btn').addEventListener('click', async (e) => {
+    e.target.disabled = true; e.target.textContent = 'Generating\u2026';
+    try { downloadPdfFromResponse(await authedCall('exportTasksPdf')); }
+    catch (err) { toast(err.message, 'error'); }
+    finally { e.target.disabled = false; e.target.textContent = 'Export Tasks PDF'; }
+  });
+}
+
+/* ===================== TAB: ACCOUNT ===================== */
+function renderAccount() {
+  document.getElementById('content').innerHTML = `
+    <div class="card">
+      <div class="card-header"><h2>Your account</h2></div>
+      <p><strong>Name:</strong> ${escapeHtml(State.fullName || State.username)}</p>
+      <p><strong>Username:</strong> ${escapeHtml(State.username)}</p>
+      <p><strong>Role:</strong> ${escapeHtml(State.role)}</p>
+      <h3 style="margin-top:20px;">Change password</h3>
+      <form id="pw-form">
+        <div class="form-grid">
+          <div class="field"><label>Current password</label><input type="password" name="oldPassword" required></div>
+          <div class="field"><label>New password</label><input type="password" name="newPassword" required></div>
+        </div>
+        <div id="pw-error" class="form-error hidden" style="margin-top:12px;"></div>
+        <button type="submit" class="btn" style="margin-top:12px;">Update password</button>
+      </form>
+    </div>`;
+
+  document.getElementById('pw-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const errEl = document.getElementById('pw-error');
+    errEl.classList.add('hidden');
+    const fd = new FormData(e.target);
+    try {
+      const data = await authedCall('changeOwnPassword', { oldPassword: fd.get('oldPassword'), newPassword: fd.get('newPassword') });
+      if (!data.success) throw new Error(data.message || 'Could not update password.');
+      toast('Password updated.', 'success');
+      e.target.reset();
+    } catch (err) {
+      errEl.textContent = err.message;
       errEl.classList.remove('hidden');
     }
   });
@@ -808,58 +768,9 @@ const TAB_RENDERERS = {
   tasks: renderTasks,
   team: renderTeam,
   updates: renderUpdates,
-  documents: () => { document.getElementById('content').innerHTML = emptyState('Documents view'); },
-  reassign: () => { document.getElementById('content').innerHTML = emptyState('Reassignment requests view'); },
-  comments: () => { document.getElementById('content').innerHTML = emptyState('Comments view'); },
-  reports: () => { document.getElementById('content').innerHTML = emptyState('Reports view'); },
-  account: () => { document.getElementById('content').innerHTML = emptyState('Account view', `Logged in as ${State.fullName || State.username}`); },
-  mytasks: () => { document.getElementById('content').innerHTML = emptyState('My tasks view'); },
-  mydocuments: () => { document.getElementById('content').innerHTML = emptyState('My documents view'); },
-  myupdates: () => { document.getElementById('content').innerHTML = emptyState('My announcements view'); },
-  mycomments: () => { document.getElementById('content').innerHTML = emptyState('My comments view'); },
+  reports: renderReports,
+  account: renderAccount,
 };
 
 /* Start the app when DOM is ready */
 document.addEventListener('DOMContentLoaded', init);
-
-/**
- * Retrieves the scoped list of available projects for the active user session.
- * - Coordinators obtain only their AssignedProjects list via `getMyScope`.
- * - Admins receive the full `PROJECT_OPTIONS` array.
- */
-async function fetchScopedProjectOptions() {
-  if (State.role === 'Coordinator') {
-    try {
-      const res = await Api.call('getMyScope', { token: State.token });
-      if (res && res.success && Array.isArray(res.projects)) {
-        return res.projects;
-      }
-    } catch (e) {
-      console.error('Failed to fetch scoped projects:', e);
-    }
-    return [];
-  }
-  return State.config.projectOptions || [];
-}
-
-/**
- * Builds project selection options (dropdown or checkbox checklist)
- * based on role scoping.
- */
-async function buildProjectSelectOptions(selectElementId, isMultiChecklist = false) {
-  const options = await fetchScopedProjectOptions();
-  const container = document.getElementById(selectElementId);
-  if (!container) return;
-
-  if (isMultiChecklist) {
-    container.innerHTML = options.map(p => `
-      <label class="checkbox-item">
-        <input type="checkbox" name="projects" value="${escapeHtml(p)}">
-        <span>${escapeHtml(p)}</span>
-      </label>
-    `).join('');
-  } else {
-    container.innerHTML = `<option value="">Select Project</option>` +
-      options.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
-  }
-}
