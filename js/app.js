@@ -204,20 +204,23 @@ function checklistHtml(name, options, selectedList) {
 }
 
 /* ===================== SESSION ===================== */
+// sessionStorage (not localStorage): cleared automatically when the tab or
+// browser is closed, so returning to the site later always requires a
+// fresh login instead of silently reopening the last person's session.
 function saveSession() {
-  localStorage.setItem('fl_session', JSON.stringify({
+  sessionStorage.setItem('fl_session', JSON.stringify({
     token: State.token, role: State.role, fullName: State.fullName, username: State.username,
   }));
 }
 function loadSession() {
   try {
-    const raw = localStorage.getItem('fl_session');
+    const raw = sessionStorage.getItem('fl_session');
     if (!raw) return null;
     return JSON.parse(raw);
   } catch (e) { return null; }
 }
 function clearSession() {
-  localStorage.removeItem('fl_session');
+  sessionStorage.removeItem('fl_session');
   State.token = State.role = State.fullName = State.username = null;
 }
 
@@ -498,16 +501,24 @@ async function renderTeam() {
   catch (err) { document.getElementById('content').innerHTML = emptyState('Could not load team logins', err.message); return; }
   if (!Array.isArray(users)) users = [];
 
-  const rows = users.map(u => `
+  const rows = users.map(u => {
+    const scopeBits = [];
+    if (u.AssignedCategory) scopeBits.push(escapeHtml(u.AssignedCategory));
+    if (u.AssignedProjects) scopeBits.push(projectStamps(u.AssignedProjects));
+    const scopeCell = u.Role === 'Coordinator'
+      ? (scopeBits.length ? scopeBits.join(' ') : '<span style="color:var(--muted)">Unscoped</span>')
+      : (escapeHtml(u.ContactName) || '<span style="color:var(--muted)">\u2014</span>');
+    return `
     <tr>
       <td><strong>${escapeHtml(u.Username)}</strong></td>
       <td>${escapeHtml(u.FullName)}</td>
       <td>${escapeHtml(u.Role)}</td>
       <td>${escapeHtml(u.Email)}</td>
-      <td>${escapeHtml(u.ContactName) || '<span style="color:var(--muted)">\u2014</span>'}</td>
+      <td>${scopeCell}</td>
       <td><span class="badge ${u.Active ? 'badge-active' : 'badge-inactive'}">${u.Active ? 'Active' : 'Inactive'}</span></td>
       <td><button class="btn btn-ghost btn-sm" data-toggle="${escapeHtml(u.UserId)}" data-active="${u.Active ? '1' : '0'}">${u.Active ? 'Deactivate' : 'Activate'}</button></td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
   document.getElementById('content').innerHTML = `
     <div class="toolbar">
@@ -515,7 +526,7 @@ async function renderTeam() {
       <div class="toolbar-actions"><button class="btn btn-clay" id="add-user-btn">+ Create login</button></div>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Email</th><th>Linked contact</th><th>Status</th><th></th></tr></thead>
+      <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Email</th><th>Linked contact / scope</th><th>Status</th><th></th></tr></thead>
       <tbody>${rows || `<tr><td colspan="7">${emptyState('No logins yet')}</td></tr>`}</tbody>
     </table></div>`;
 
@@ -543,16 +554,30 @@ async function openUserModal() {
         <select name="contactId"><option value="">Select a contact\u2026</option>${contactOptions}</select>
         <div class="hint">Required for Partners, Donor, Supporter, and Implementer logins \u2014 this scopes what they can see.</div>
       </div>
+      <div class="field span-2 hidden" id="user-coord-category-field">
+        <label>Assigned category</label>
+        <select name="assignedCategory"><option value="">No category restriction</option>${selectOptionsHtml(State.config.categoryOptions)}</select>
+        <div class="hint">Optional. Leave as "No category restriction" to scope by project only.</div>
+      </div>
+      <div class="field span-2 hidden" id="user-coord-projects-field">
+        <label>Assigned project(s)</label>
+        ${checklistHtml('assignedProjects', State.config.projectOptions, [])}
+        <div class="hint">A Coordinator needs at least a category or one project assigned \u2014 this scopes which contacts, tasks, and documents they can see and manage.</div>
+      </div>
     </div>`;
   const close = openModal('Create login', body, {
     submitLabel: 'Create login',
     onSubmit: async (fd, closeFn) => {
-      await authedCall('createUser', {
-        data: {
-          username: fd.get('username'), password: fd.get('password'), fullName: fd.get('fullName'),
-          email: fd.get('email'), role: fd.get('role'), contactId: fd.get('contactId'),
-        },
-      });
+      const role = fd.get('role');
+      const data = {
+        username: fd.get('username'), password: fd.get('password'), fullName: fd.get('fullName'),
+        email: fd.get('email'), role, contactId: fd.get('contactId'),
+      };
+      if (role === 'Coordinator') {
+        data.assignedCategory = fd.get('assignedCategory');
+        data.assignedProjects = fd.getAll('assignedProjects');
+      }
+      await authedCall('createUser', { data });
       toast('Login created.', 'success');
       closeFn();
       renderTeam();
@@ -560,9 +585,16 @@ async function openUserModal() {
   });
   const roleSelect = document.getElementById('user-role-select');
   const contactField = document.getElementById('user-contact-field');
-  const syncContactField = () => { contactField.style.display = needsLinkRoles.includes(roleSelect.value) ? '' : 'none'; };
-  roleSelect.addEventListener('change', syncContactField);
-  syncContactField();
+  const coordCategoryField = document.getElementById('user-coord-category-field');
+  const coordProjectsField = document.getElementById('user-coord-projects-field');
+  const syncRoleFields = () => {
+    contactField.style.display = needsLinkRoles.includes(roleSelect.value) ? '' : 'none';
+    const isCoordinator = roleSelect.value === 'Coordinator';
+    coordCategoryField.classList.toggle('hidden', !isCoordinator);
+    coordProjectsField.classList.toggle('hidden', !isCoordinator);
+  };
+  roleSelect.addEventListener('change', syncRoleFields);
+  syncRoleFields();
 }
 
 /* ===================== TAB: UPDATES / ANNOUNCEMENTS (Admin/Coordinator) ===================== */
