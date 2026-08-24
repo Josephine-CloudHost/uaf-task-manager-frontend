@@ -11,19 +11,15 @@
 </head>
 <body>
 <div id="root">
-
   <!-- ===================== LOGIN ===================== -->
   <section id="login-screen" class="screen">
     <div class="login-card">
-
       <div class="login-mark">
         <p class="org-eyebrow">Upskill Africa Foundation</p>
         <h1 class="login-title">Tasks Tracker</h1>
         <p class="login-sub">Programs, tasks and partner reporting in one place</p>
       </div>
-
       <div id="login-error" class="form-error hidden"></div>
-
       <form id="login-form">
         <div class="field">
           <label for="login-username">Username</label>
@@ -34,22 +30,28 @@
           <input type="password" id="login-password" autocomplete="current-password" required>
         </div>
         <div class="field">
+          <!--
+            STAGE 4 UPDATE: the old "Any (match account)" placeholder
+            option has been removed. A specific user type is now
+            REQUIRED to log in — this is populated from getConfig's
+            roleOptions by app.js, with NO blank/"any" entry added.
+            The backend (login()) independently rejects a login that
+            arrives with no selectedRole, so this can't be bypassed by
+            an old cached copy of this page either.
+          -->
           <label for="login-role">User type</label>
-          <select id="login-role">
-            <option value="">Any (match account)</option>
+          <select id="login-role" required>
+            <option value="" disabled selected>Select your user type…</option>
           </select>
-          <div class="hint">If you know your role, selecting it adds a check against the wrong portal.</div>
+          <div class="hint">Choose the portal you were given access to. This is checked against your account.</div>
         </div>
         <button type="submit" class="btn btn-full" id="login-submit">Log in</button>
       </form>
-
       <p class="login-footer">Upskill Africa Foundation &middot; Internal system</p>
     </div>
   </section>
-
   <!-- ===================== APP SHELL (top navbar layout) ===================== -->
   <div id="app-shell" class="app-shell hidden">
-
     <header class="topbar">
       <div class="topbar-brand">
         <span class="topbar-org">Upskill Africa Foundation</span>
@@ -63,9 +65,7 @@
         <button class="btn btn-ghost btn-sm" id="logout-btn">Log out</button>
       </div>
     </header>
-
     <nav class="tabnav" id="nav"></nav>
-
     <main class="main">
       <div class="page-header">
         <h1 id="page-title">—</h1>
@@ -74,11 +74,9 @@
       <div id="content"></div>
     </main>
   </div>
-
   <div id="modal-root"></div>
   <div id="toast-root"></div>
 </div>
-
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
