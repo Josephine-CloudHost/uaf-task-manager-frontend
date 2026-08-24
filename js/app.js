@@ -551,14 +551,17 @@ async function renderTeam() {
         <div class="hint">Required for Partners, Donor, Supporter, and Implementer logins.</div>
       </div>
       
-           <div class="field span-full hidden" id="user-coord-projects-field">
-      
+       <div class="field span-full" id="user-contact-field">
+        <label>Linked contact</label>
+        <select name="contactId"><option value="">Select a contact&hellip;</option>${contactOptions}</select>
+        <div class="hint">Required for Partners, Donor, Supporter, and Implementer logins.</div>
+      </div>
       <div class="field span-full hidden" id="user-coord-projects-field">
         <label>Assigned project(s)</label>
         ${checklistHtml('assignedProjects', State.config.projectOptions, [])}
       </div>
     </div>`;
-
+  
   const rows = users.map(u => {
     const scopeBits = [];
    if (u.AssignedProjects) scopeBits.push(projectStamps(u.AssignedProjects));
