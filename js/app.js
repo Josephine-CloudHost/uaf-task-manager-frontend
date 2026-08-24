@@ -541,7 +541,7 @@ async function renderTeam() {
   const drawerFormBody = `
     <div class="form-grid">
       <div class="field"><label>Username</label><input type="text" name="username" required></div>
-      <div class="field"><label>Temporary password</label><input type="text" name="password" required></div>
+      <div class="field"><label>Temporary password</label><input type="text" name="password" id="user-password-field" required></div>
       <div class="field"><label>Role</label><select name="role" id="user-role-select">${selectOptionsHtml(State.config.roleOptions)}</select></div>
       <div class="field span-full"><label>Full name</label><input type="text" name="fullName" required></div>
       <div class="field span-full"><label>Email</label><input type="email" name="email"></div>
@@ -570,7 +570,10 @@ async function renderTeam() {
       <td>${escapeHtml(u.Email)}</td>
       <td>${scopeCell}</td>
       <td><span class="${u.Active ? 'badge' : 'badge danger'}">${u.Active ? 'Active' : 'Inactive'}</span></td>
-      <td><button class="btn btn-ghost btn-sm" data-toggle="${escapeHtml(u.UserId)}" data-active="${u.Active ? '1' : '0'}">${u.Active ? 'Deactivate' : 'Activate'}</button></td>
+      <td>
+        <button class="btn btn-ghost btn-sm" data-edit="${escapeHtml(u.UserId)}">Edit</button>
+        <button class="btn btn-ghost btn-sm" data-toggle="${escapeHtml(u.UserId)}" data-active="${u.Active ? '1' : '0'}">${u.Active ? 'Deactivate' : 'Activate'}</button>
+      </td>
     </tr>`;
   }).join('');
 
@@ -590,12 +593,23 @@ async function renderTeam() {
     </div>`;
 
   const needsLinkRoles = ['Partners', 'Donor', 'Supporter', 'Implementer'];
+
+  // Tracks which user (if any) we're editing. null = "create" mode.
+  let editingUserId = null;
+
+  const drawerEl = document.getElementById('user-drawer');
+  const drawerTitleEl = drawerEl.querySelector('.drawer-panel-header h3');
+  const submitBtn = drawerEl.querySelector('button[type="submit"]');
+  const passwordField = document.getElementById('user-password-field');
+
   const drawerController = setupDrawer({
-    drawerEl: document.getElementById('user-drawer'),
+    drawerEl,
     onOpen: () => {
+      const form = drawerEl.querySelector('.drawer-form');
       const roleSelect = document.getElementById('user-role-select');
       const contactField = document.getElementById('user-contact-field');
       const coordProjectsField = document.getElementById('user-coord-projects-field');
+
       const syncRoleFields = () => {
         if (!roleSelect) return;
         contactField.style.display = needsLinkRoles.includes(roleSelect.value) ? '' : 'none';
@@ -604,8 +618,42 @@ async function renderTeam() {
       };
       if (roleSelect) {
         roleSelect.onchange = syncRoleFields;
-        syncRoleFields();
       }
+
+      if (editingUserId) {
+        // EDIT MODE: pre-fill the form from the selected user
+        const user = users.find(u => u.UserId === editingUserId);
+        if (user) {
+          form.username.value = user.Username;
+          form.username.disabled = true;              // usernames aren't editable
+          passwordField.required = false;              // don't force a password change
+          passwordField.placeholder = 'Leave blank to keep current password';
+          form.fullName.value = user.FullName || '';
+          form.email.value = user.Email || '';
+          if (roleSelect) roleSelect.value = user.Role;
+          if (form.contactId) {
+            const contact = contacts.find(c => c.Name === user.ContactName);
+            form.contactId.value = contact ? contact.ContactId : '';
+          }
+          if (user.Role === 'Coordinator' && user.AssignedProjects) {
+            const assigned = String(user.AssignedProjects).split(',').map(s => s.trim());
+            form.querySelectorAll('input[name="assignedProjects"]').forEach(cb => {
+              cb.checked = assigned.includes(cb.value);
+            });
+          }
+        }
+        drawerTitleEl.textContent = 'Edit user login';
+        submitBtn.textContent = 'Save changes';
+      } else {
+        // CREATE MODE: reset everything back to defaults
+        form.username.disabled = false;
+        passwordField.required = true;
+        passwordField.placeholder = '';
+        drawerTitleEl.textContent = 'Create new user login';
+        submitBtn.textContent = 'Create login';
+      }
+
+      syncRoleFields();
     },
     onSubmit: async (fd, close) => {
       const role = fd.get('role');
@@ -616,21 +664,42 @@ async function renderTeam() {
       if (role === 'Coordinator') {
         data.assignedProjects = fd.getAll('assignedProjects');
       }
-      await authedCall('createUser', { data });
-      toast('Login created.', 'success');
+
+      if (editingUserId) {
+        if (!data.password) delete data.password; // don't overwrite password if left blank
+        await authedCall('updateUser', { userId: editingUserId, data });
+        toast('Login updated.', 'success');
+      } else {
+        await authedCall('createUser', { data });
+        toast('Login created.', 'success');
+      }
       close();
       renderTeam();
+    },
+    onClose: () => {
+      editingUserId = null;
+      const form = drawerEl.querySelector('.drawer-form');
+      form.username.disabled = false;
+      passwordField.required = true;
+      passwordField.placeholder = '';
     }
   });
 
-  document.getElementById('add-user-btn').addEventListener('click', () => drawerController.open());
+  document.getElementById('add-user-btn').addEventListener('click', () => {
+    editingUserId = null;
+    drawerController.open();
+  });
+
+  document.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => {
+    editingUserId = b.dataset.edit;
+    drawerController.open();
+  }));
 
   document.querySelectorAll('[data-toggle]').forEach(b => b.addEventListener('click', async () => {
     try { await authedCall('setUserActive', { userId: b.dataset.toggle, active: b.dataset.active !== '1' }); toast('Updated.', 'success'); renderTeam(); }
     catch (err) { toast(err.message, 'error'); }
   }));
 }
-
 /* ===================== TAB: UPDATES / ANNOUNCEMENTS (Admin/Coordinator) ===================== */
 async function renderUpdates() {
   setLoading();
