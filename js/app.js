@@ -550,10 +550,9 @@ async function renderTeam() {
         <select name="contactId"><option value="">Select a contact\u2026</option>${contactOptions}</select>
         <div class="hint">Required for Partners, Donor, Supporter, and Implementer logins.</div>
       </div>
-      <div class="field span-full hidden" id="user-coord-category-field">
-        <label>Assigned category</label>
-        <select name="assignedCategory"><option value="">No category restriction</option>${selectOptionsHtml(State.config.categoryOptions)}</select>
-      </div>
+      
+           <div class="field span-full hidden" id="user-coord-projects-field">
+      
       <div class="field span-full hidden" id="user-coord-projects-field">
         <label>Assigned project(s)</label>
         ${checklistHtml('assignedProjects', State.config.projectOptions, [])}
@@ -562,8 +561,7 @@ async function renderTeam() {
 
   const rows = users.map(u => {
     const scopeBits = [];
-    if (u.AssignedCategory) scopeBits.push(escapeHtml(u.AssignedCategory));
-    if (u.AssignedProjects) scopeBits.push(projectStamps(u.AssignedProjects));
+   if (u.AssignedProjects) scopeBits.push(projectStamps(u.AssignedProjects));
     const scopeCell = u.Role === 'Coordinator'
       ? (scopeBits.length ? scopeBits.join(' ') : '<span style="color:var(--ink-soft)">Unscoped</span>')
       : (escapeHtml(u.ContactName) || '<span style="color:var(--ink-soft)">\u2014</span>');
@@ -600,13 +598,11 @@ async function renderTeam() {
     onOpen: () => {
       const roleSelect = document.getElementById('user-role-select');
       const contactField = document.getElementById('user-contact-field');
-      const coordCategoryField = document.getElementById('user-coord-category-field');
       const coordProjectsField = document.getElementById('user-coord-projects-field');
       const syncRoleFields = () => {
         if (!roleSelect) return;
         contactField.style.display = needsLinkRoles.includes(roleSelect.value) ? '' : 'none';
         const isCoordinator = roleSelect.value === 'Coordinator';
-        coordCategoryField.classList.toggle('hidden', !isCoordinator);
         coordProjectsField.classList.toggle('hidden', !isCoordinator);
       };
       if (roleSelect) {
@@ -620,8 +616,7 @@ async function renderTeam() {
         username: fd.get('username'), password: fd.get('password'), fullName: fd.get('fullName'),
         email: fd.get('email'), role, contactId: fd.get('contactId'),
       };
-      if (role === 'Coordinator') {
-        data.assignedCategory = fd.get('assignedCategory');
+            if (role === 'Coordinator') {
         data.assignedProjects = fd.getAll('assignedProjects');
       }
       await authedCall('createUser', { data });
