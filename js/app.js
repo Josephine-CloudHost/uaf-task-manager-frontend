@@ -274,7 +274,7 @@ async function init() {
 
   const loginForm = document.getElementById('login-form');
   if (loginForm) loginForm.addEventListener('submit', onLoginSubmit);
-  
+
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) logoutBtn.addEventListener('click', onLogout);
 
@@ -460,7 +460,7 @@ async function renderContacts() {
 async function renderTasks() {
   setLoading();
   let tasks, contacts = [];
-  try { 
+  try {
     [tasks, contacts] = await Promise.all([authedCall('getTasks'), fetchContacts()]);
   } catch (err) { document.getElementById('content').innerHTML = emptyState('Could not load tasks', err.message); return; }
   if (!Array.isArray(tasks)) tasks = [];
@@ -532,7 +532,7 @@ async function renderTasks() {
 async function renderTeam() {
   setLoading();
   let users, contacts = [];
-  try { 
+  try {
     [users, contacts] = await Promise.all([authedCall('getUsers'), fetchContacts()]);
   } catch (err) { document.getElementById('content').innerHTML = emptyState('Could not load team logins', err.message); return; }
   if (!Array.isArray(users)) users = [];
@@ -550,21 +550,15 @@ async function renderTeam() {
         <select name="contactId"><option value="">Select a contact\u2026</option>${contactOptions}</select>
         <div class="hint">Required for Partners, Donor, Supporter, and Implementer logins.</div>
       </div>
-      
-       <div class="field span-full" id="user-contact-field">
-        <label>Linked contact</label>
-        <select name="contactId"><option value="">Select a contact&hellip;</option>${contactOptions}</select>
-        <div class="hint">Required for Partners, Donor, Supporter, and Implementer logins.</div>
-      </div>
       <div class="field span-full hidden" id="user-coord-projects-field">
         <label>Assigned project(s)</label>
         ${checklistHtml('assignedProjects', State.config.projectOptions, [])}
       </div>
     </div>`;
-  
+
   const rows = users.map(u => {
     const scopeBits = [];
-   if (u.AssignedProjects) scopeBits.push(projectStamps(u.AssignedProjects));
+    if (u.AssignedProjects) scopeBits.push(projectStamps(u.AssignedProjects));
     const scopeCell = u.Role === 'Coordinator'
       ? (scopeBits.length ? scopeBits.join(' ') : '<span style="color:var(--ink-soft)">Unscoped</span>')
       : (escapeHtml(u.ContactName) || '<span style="color:var(--ink-soft)">\u2014</span>');
@@ -619,7 +613,7 @@ async function renderTeam() {
         username: fd.get('username'), password: fd.get('password'), fullName: fd.get('fullName'),
         email: fd.get('email'), role, contactId: fd.get('contactId'),
       };
-            if (role === 'Coordinator') {
+      if (role === 'Coordinator') {
         data.assignedProjects = fd.getAll('assignedProjects');
       }
       await authedCall('createUser', { data });
@@ -758,6 +752,7 @@ const TAB_RENDERERS = {
 
 /* Start the app when DOM is ready */
 document.addEventListener('DOMContentLoaded', init);
+
 /**
  * Retrieves the scoped list of available projects for the active user session.
  * - Coordinators obtain only their AssignedProjects list via `getMyScope`.
@@ -766,7 +761,7 @@ document.addEventListener('DOMContentLoaded', init);
 async function fetchScopedProjectOptions() {
   if (State.role === 'Coordinator') {
     try {
-      const res = await apiCall('getMyScope', { token: State.token });
+      const res = await Api.call('getMyScope', { token: State.token });
       if (res && res.success && Array.isArray(res.projects)) {
         return res.projects;
       }
@@ -790,17 +785,12 @@ async function buildProjectSelectOptions(selectElementId, isMultiChecklist = fal
   if (isMultiChecklist) {
     container.innerHTML = options.map(p => `
       <label class="checkbox-item">
-        <input type="checkbox" name="projects" value="${p}">
-        <span>${p}</span>
+        <input type="checkbox" name="projects" value="${escapeHtml(p)}">
+        <span>${escapeHtml(p)}</span>
       </label>
     `).join('');
   } else {
-    container.innerHTML = `<option value="">Select Project</option>` + 
-      options.map(p => `<option value="${p}">${p}</option>`).join('');
+    container.innerHTML = `<option value="">Select Project</option>` +
+      options.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
   }
 }
-
-// Call `buildProjectSelectOptions` when initializing drawers:
-// 1. Add Contact Drawer -> buildProjectSelectOptions('contactProjectsInput', true)
-// 2. Add Task Drawer -> buildProjectSelectOptions('taskProjectSelect')
-// 3. Send Update/Announcement Drawer -> buildProjectSelectOptions('updateProjectSelect')
