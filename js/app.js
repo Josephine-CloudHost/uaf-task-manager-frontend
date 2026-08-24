@@ -760,3 +760,49 @@ const TAB_RENDERERS = {
 
 /* Start the app when DOM is ready */
 document.addEventListener('DOMContentLoaded', init);
+/**
+ * Retrieves the scoped list of available projects for the active user session.
+ * - Coordinators obtain only their AssignedProjects list via `getMyScope`.
+ * - Admins receive the full `PROJECT_OPTIONS` array.
+ */
+async function fetchScopedProjectOptions() {
+  if (State.role === 'Coordinator') {
+    try {
+      const res = await apiCall('getMyScope', { token: State.token });
+      if (res && res.success && Array.isArray(res.projects)) {
+        return res.projects;
+      }
+    } catch (e) {
+      console.error('Failed to fetch scoped projects:', e);
+    }
+    return [];
+  }
+  return State.config.projectOptions || [];
+}
+
+/**
+ * Builds project selection options (dropdown or checkbox checklist)
+ * based on role scoping.
+ */
+async function buildProjectSelectOptions(selectElementId, isMultiChecklist = false) {
+  const options = await fetchScopedProjectOptions();
+  const container = document.getElementById(selectElementId);
+  if (!container) return;
+
+  if (isMultiChecklist) {
+    container.innerHTML = options.map(p => `
+      <label class="checkbox-item">
+        <input type="checkbox" name="projects" value="${p}">
+        <span>${p}</span>
+      </label>
+    `).join('');
+  } else {
+    container.innerHTML = `<option value="">Select Project</option>` + 
+      options.map(p => `<option value="${p}">${p}</option>`).join('');
+  }
+}
+
+// Call `buildProjectSelectOptions` when initializing drawers:
+// 1. Add Contact Drawer -> buildProjectSelectOptions('contactProjectsInput', true)
+// 2. Add Task Drawer -> buildProjectSelectOptions('taskProjectSelect')
+// 3. Send Update/Announcement Drawer -> buildProjectSelectOptions('updateProjectSelect')
