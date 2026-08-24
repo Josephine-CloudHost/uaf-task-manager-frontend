@@ -8,7 +8,7 @@
  *************************************************************/
 const Api = (() => {
   async function call(action, params = {}) {
-    if (!CONFIG.API_URL || CONFIG.API_URL.indexOf('https://script.google.com/macros/s/AKfycbwzaMVLvA-GRuw0EzgmudNnkVQ733otZmgk8Nv40b6WHvWqmuwSCyLLoF2E9a_x1exKkA/exec') === 0) {
+    if (!CONFIG.API_URL || CONFIG.API_URL.indexOf( YOUR_URL) === 0) {
       throw new Error('This app has not been configured yet — set API_URL in js/config.js.');
     }
     let res;
