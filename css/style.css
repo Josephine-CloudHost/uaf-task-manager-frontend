@@ -28,6 +28,13 @@
      strip scrolls horizontally on narrow / Android widths instead of
      wrapping or collapsing behind a menu, so every section stays one
      tap away.
+
+     STAGE 4 UPDATE: content is now hard-contained to the viewport
+     width (see "Content containment" below) so long tables scroll
+     *within* their own card instead of stretching the whole page
+     wider than the tab strip. "Add ___" forms are now inline
+     drawers (see "Inline drawer forms") that open in the flow of
+     the page instead of a full-screen modal overlay.
    ===================================================================== */
 
 * { box-sizing: border-box; }
@@ -43,6 +50,7 @@
   --line:#DDE3EA;
   --danger:#B3432B;
   --danger-bg:#FBEEEA;
+  --active-bg:#E8F0F9;
   --radius:6px;
   --shadow-card: 0 1px 2px rgba(20,40,70,0.05), 0 8px 24px rgba(20,40,70,0.06);
   --font-head:'Source Serif 4', Georgia, serif;
@@ -52,6 +60,10 @@
 
 html,body{ height:100%; }
 
+/* Content containment — the page itself never scrolls sideways; only
+   individual .table-wrapper elements do, so a wide table can never
+   push the tab strip or header out of alignment. */
+html{ overflow-x:hidden; }
 body{
   margin:0;
   background:var(--bg);
@@ -60,6 +72,8 @@ body{
   font-size:15px;
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  width:100%;
 }
 
 h1,h2,h3{ font-family:var(--font-head); font-weight:600; color:var(--ink); margin:0; }
@@ -179,23 +193,46 @@ button, input, select{ font-family:inherit; font-size:inherit; }
 .form-grid .field{ margin-bottom:0; }
 .form-grid .field.span-full{ grid-column:1 / -1; }
 
+/* ---------------------------------------------------------------------
+   Checkbox / project-selection groups (Add Contact "Projects", role
+   assignment "AssignedProjects", etc). Rebuilt as an even grid so every
+   checkbox sits in the same position relative to its label, instead of
+   a ragged flex-wrap row. Each item is a single <label> containing the
+   <input type="checkbox"> immediately followed by its text — that
+   pairing is what keeps the box locked directly in front of its own
+   label rather than drifting from row to row.
+   --------------------------------------------------------------------- */
 .checkbox-row{
-  display:flex;
-  flex-wrap:wrap;
-  gap:18px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
+  gap:10px 18px;
   margin-top:6px;
 }
 .checkbox-row label{
   display:flex;
   align-items:center;
-  gap:7px;
+  gap:9px;
   font-size:13.5px;
   color:var(--ink);
   font-weight:500;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-radius:4px;
+  background:var(--surface);
+  cursor:pointer;
+  transition:border-color .15s ease, background .15s ease;
+}
+.checkbox-row label:hover{ border-color:var(--accent); }
+.checkbox-row label:has(input:checked){
+  border-color:var(--primary);
+  background:var(--active-bg);
 }
 .checkbox-row input[type="checkbox"]{
   width:16px; height:16px;
+  flex:0 0 16px;
+  margin:0;
   accent-color:var(--primary);
+  order:-1; /* box always renders first, label text always second/behind it */
 }
 
 /* ---------------------------------------------------------------------
@@ -241,7 +278,7 @@ button, input, select{ font-family:inherit; font-size:inherit; }
 /* =====================================================================
    APP SHELL — top navbar + horizontal tab strip
    ===================================================================== */
-.app-shell{ display:flex; flex-direction:column; min-height:100vh; }
+.app-shell{ display:flex; flex-direction:column; min-height:100vh; width:100%; max-width:100vw; }
 
 /* ---------------------------------------------------------------------
    Top bar: brand left, account + log out right
@@ -296,7 +333,9 @@ button, input, select{ font-family:inherit; font-size:inherit; }
 /* ---------------------------------------------------------------------
    Horizontal tab navigation
    Scrolls on narrow / Android widths instead of wrapping behind a menu,
-   so every tab stays reachable with a swipe.
+   so every tab stays reachable with a swipe. The active tab now gets a
+   filled pill treatment (background + bolder underline), not just a
+   colour change, so it's unmistakable at a glance in every account type.
    --------------------------------------------------------------------- */
 .tabnav{
   background:var(--surface);
@@ -305,6 +344,7 @@ button, input, select{ font-family:inherit; font-size:inherit; }
   gap:4px;
   padding:0 24px;
   overflow-x:auto;
+  overflow-y:hidden;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
 }
@@ -313,8 +353,10 @@ button, input, select{ font-family:inherit; font-size:inherit; }
 .tabnav a, .tabnav button, .tab-item{
   flex:0 0 auto;
   white-space:nowrap;
-  padding:14px 14px 12px;
+  padding:12px 16px 10px;
+  margin:6px 0;
   border:none;
+  border-radius:5px;
   background:transparent;
   color:var(--ink-soft);
   font-size:13.5px;
@@ -324,17 +366,19 @@ button, input, select{ font-family:inherit; font-size:inherit; }
   text-decoration:none;
 }
 
-.tabnav a:hover, .tabnav button:hover, .tab-item:hover{ color:var(--primary); }
+.tabnav a:hover, .tabnav button:hover, .tab-item:hover{ color:var(--primary); background:rgba(29,78,137,0.05); }
 
 .tabnav a.active, .tab-item.active{
-  color:var(--primary);
+  color:var(--primary-dk);
+  background:var(--active-bg);
   border-bottom-color:var(--primary);
+  font-weight:700;
 }
 
 /* ---------------------------------------------------------------------
    Main / page header / content
    --------------------------------------------------------------------- */
-.main{ flex:1; padding:24px 28px 48px; max-width:1180px; width:100%; margin:0 auto; }
+.main{ flex:1; padding:24px 28px 48px; max-width:1180px; width:100%; margin:0 auto; overflow-x:hidden; }
 
 .page-header{ margin-bottom:18px; }
 .page-header h1{ font-size:21px; }
@@ -351,17 +395,28 @@ button, input, select{ font-family:inherit; font-size:inherit; }
   box-shadow:var(--shadow-card);
   padding:22px 24px;
   margin-bottom:22px;
+  max-width:100%;
+  overflow:hidden; /* a wide child (table-wrapper) scrolls itself, never the card */
 }
 
 .card-header{
   display:flex;
   align-items:center;
+  justify-content:space-between;
   gap:12px;
   margin-bottom:18px;
+  flex-wrap:wrap;
 }
 .card-header h2, .card-header h3{ font-size:16px; }
 
-.table-wrapper{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+/* The ONE place horizontal scroll is allowed to happen — a wide table
+   scrolls inside this box, and never the page around it. */
+.table-wrapper{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  max-width:100%;
+  border-radius:4px;
+}
 
 table{ width:100%; border-collapse:collapse; background:var(--surface); min-width:560px; }
 
@@ -395,8 +450,54 @@ tr:last-child td{ border-bottom:none; }
 
 .empty-state{ text-align:center; padding:48px 20px; color:var(--ink-soft); font-size:13.5px; }
 
+/* =====================================================================
+   INLINE DRAWER FORMS (replaces full-screen modal for "Add Contact" /
+   "Add User" / "Add Task" etc)
+   ---------------------------------------------------------------------
+   Usage: the "Add ___" button toggles a `.open` class on the
+   `.drawer` element that sits directly under the card-header, in the
+   SAME card as the list it belongs to — it never leaves the page's own
+   layout/scroll, so there's nothing to drag into view. It opens
+   downward in place (like an accordion) and pushes the list below it
+   down; "Cancel" (or a successful submit) removes `.open` and it
+   collapses back to nothing. Uses grid-template-rows 0fr -> 1fr so it
+   animates open/closed without needing a fixed max-height guess.
+   ===================================================================== */
+.drawer{
+  display:grid;
+  grid-template-rows:0fr;
+  transition:grid-template-rows .22s ease;
+  margin:0 0 18px;
+}
+.drawer.open{ grid-template-rows:1fr; }
+.drawer > .drawer-inner{ overflow:hidden; min-height:0; }
+.drawer .drawer-panel{
+  background:var(--bg);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px 22px;
+  margin-top:2px;
+}
+.drawer .drawer-panel-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:16px;
+}
+.drawer .drawer-panel-header h3{ font-size:15px; }
+.drawer .drawer-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:18px;
+  padding-top:16px;
+  border-top:1px solid var(--line);
+}
+
 /* ---------------------------------------------------------------------
    Modal / toast roots
+   Still used for confirmations (e.g. "delete this contact?") — but no
+   longer for data-entry forms, which use the inline .drawer above.
    --------------------------------------------------------------------- */
 #modal-root:not(:empty){
   position:fixed; inset:0;
@@ -411,6 +512,7 @@ tr:last-child td{ border-bottom:none; }
   bottom:22px; right:22px;
   display:flex; flex-direction:column; gap:8px;
   z-index:60;
+  max-width:calc(100vw - 44px);
 }
 
 /* =====================================================================
@@ -428,7 +530,8 @@ tr:last-child td{ border-bottom:none; }
   .main{ padding:18px 16px 40px; }
   .card{ padding:18px 16px; }
   .form-grid{ grid-template-columns:1fr; }
-  .checkbox-row{ gap:12px; }
+  .checkbox-row{ grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:8px 12px; }
+  .drawer .drawer-panel{ padding:16px; }
 }
 
 @media (max-width:480px){
